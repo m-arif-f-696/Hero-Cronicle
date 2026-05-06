@@ -10,8 +10,8 @@ import java.awt.*;
 
 public class InventoryPanel extends JPanel {
     private GameFrame frame;
-    private JPanel    charPanel;
-    private JPanel    statsPanel;
+    private JPanel charPanel;
+    private JPanel statsPanel;
 
     public InventoryPanel(GameFrame frame) {
         this.frame = frame;
@@ -22,7 +22,7 @@ public class InventoryPanel extends JPanel {
     }
 
     private void buildHeader() {
-        JPanel header = new JPanel(new BorderLayout());
+        JPanel header = new JPanel(new BorderLayout(15, 0));
         header.setBackground(UI.BG_CARD);
         header.setBorder(new EmptyBorder(12, 18, 12, 18));
 
@@ -30,7 +30,9 @@ public class InventoryPanel extends JPanel {
         back.addActionListener(e -> frame.showPanel(GameFrame.MAIN_MENU));
 
         JLabel title = UI.label("Inventory", UI.GOLD, new Font("Serif", Font.BOLD, 20));
-        header.add(back,  BorderLayout.WEST);
+        title.setHorizontalAlignment(SwingConstants.CENTER);
+
+        header.add(back, BorderLayout.WEST);
         header.add(title, BorderLayout.CENTER);
         add(header, BorderLayout.NORTH);
     }
@@ -61,8 +63,8 @@ public class InventoryPanel extends JPanel {
                 new EmptyBorder(14, 14, 14, 14)));
         statsPanel.setPreferredSize(new Dimension(220, 0));
 
-        content.add(charScroll,  BorderLayout.CENTER);
-        content.add(statsPanel,  BorderLayout.EAST);
+        content.add(charScroll, BorderLayout.CENTER);
+        content.add(statsPanel, BorderLayout.EAST);
         add(content, BorderLayout.CENTER);
     }
 
@@ -82,10 +84,10 @@ public class InventoryPanel extends JPanel {
         statsPanel.removeAll();
         statsPanel.add(UI.label("Statistik", UI.GOLD, new Font("Serif", Font.BOLD, 15)));
         statsPanel.add(Box.createVerticalStrut(12));
-        addStat("Gold",             String.valueOf(gs.gold));
-        addStat("Exploration P.",   String.valueOf(gs.explorationPoint));
-        addStat("Stage Cleared",    String.valueOf(gs.totalStageClear));
-        addStat("Monster Slain",    String.valueOf(gs.monsterSlain));
+        addStat("Gold", String.valueOf(gs.gold));
+        addStat("Exploration P.", String.valueOf(gs.explorationPoint));
+        addStat("Stage Cleared", String.valueOf(gs.totalStageClear));
+        addStat("Monster Slain", String.valueOf(gs.monsterSlain));
         statsPanel.revalidate();
         statsPanel.repaint();
     }
@@ -95,7 +97,7 @@ public class InventoryPanel extends JPanel {
         row.setOpaque(false);
         row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 24));
         row.add(UI.label(label, UI.TEXT_DIM, UI.SMALL), BorderLayout.WEST);
-        row.add(UI.label(value, UI.GOLD,     UI.SMALL), BorderLayout.EAST);
+        row.add(UI.label(value, UI.GOLD, UI.SMALL), BorderLayout.EAST);
         statsPanel.add(row);
         statsPanel.add(Box.createVerticalStrut(6));
     }
@@ -115,8 +117,8 @@ public class InventoryPanel extends JPanel {
         left.setPreferredSize(new Dimension(160, 0));
 
         Color roleColor = roleColor(p.getTipe());
-        JLabel nameLabel  = UI.label(p.getNama(), UI.GOLD_LIGHT, new Font("Serif", Font.BOLD, 14));
-        JLabel roleLabel  = UI.label(p.getTipe(), roleColor, UI.SMALL);
+        JLabel nameLabel = UI.label(p.getNama(), UI.GOLD_LIGHT, new Font("Serif", Font.BOLD, 14));
+        JLabel roleLabel = UI.label(p.getTipe(), roleColor, UI.SMALL);
         JLabel levelLabel = UI.label(p.getLevelObj().toString(), UI.TEXT_DIM, UI.SMALL);
 
         left.add(nameLabel);
@@ -136,23 +138,32 @@ public class InventoryPanel extends JPanel {
         // Right: stats grid
         JPanel right = new JPanel(new GridLayout(4, 2, 4, 2));
         right.setOpaque(false);
-        right.add(UI.label("HP",  UI.TEXT_DIM, UI.SMALL)); right.add(UI.label((int)p.getMaxHp() + "",  UI.TEXT, UI.SMALL));
-        right.add(UI.label("MP",  UI.TEXT_DIM, UI.SMALL)); right.add(UI.label((int)p.getMaxMp() + "",  UI.TEXT, UI.SMALL));
-        right.add(UI.label("ATK", UI.TEXT_DIM, UI.SMALL)); right.add(UI.label((int)p.getAtkPower()+"", UI.TEXT, UI.SMALL));
-        right.add(UI.label("DEF", UI.TEXT_DIM, UI.SMALL)); right.add(UI.label((int)p.getDefPower()+"", UI.TEXT, UI.SMALL));
+        right.add(UI.label("HP", UI.TEXT_DIM, UI.SMALL));
+        right.add(UI.label((int) p.getMaxHp() + "", UI.TEXT, UI.SMALL));
+        right.add(UI.label("MP", UI.TEXT_DIM, UI.SMALL));
+        right.add(UI.label((int) p.getMaxMp() + "", UI.TEXT, UI.SMALL));
+        right.add(UI.label("ATK", UI.TEXT_DIM, UI.SMALL));
+        right.add(UI.label((int) p.getAtkPower() + "", UI.TEXT, UI.SMALL));
+        right.add(UI.label("DEF", UI.TEXT_DIM, UI.SMALL));
+        right.add(UI.label((int) p.getDefPower() + "", UI.TEXT, UI.SMALL));
 
-        card.add(left,  BorderLayout.WEST);
+        card.add(left, BorderLayout.WEST);
         card.add(right, BorderLayout.EAST);
         return card;
     }
 
     private Color roleColor(String tipe) {
         switch (tipe) {
-            case "Assassin": return new Color(224,128,128);
-            case "Healer":   return new Color(128,208,128);
-            case "Swordman": return UI.GOLD;
-            case "Tank":     return new Color(128,160,224);
-            default:         return UI.TEXT;
+            case "Assassin":
+                return new Color(224, 128, 128);
+            case "Healer":
+                return new Color(128, 208, 128);
+            case "Swordman":
+                return UI.GOLD;
+            case "Tank":
+                return new Color(128, 160, 224);
+            default:
+                return UI.TEXT;
         }
     }
 }
