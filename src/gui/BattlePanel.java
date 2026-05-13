@@ -11,33 +11,34 @@ import java.util.List;
 import java.util.Random;
 
 public class BattlePanel extends JPanel {
-    private GameFrame   frame;
-    private GameState   gs;
+    private GameFrame frame;
+    private GameState gs;
 
     // Battle state
-    private List<Enemy>  enemies;
+    private List<Enemy> enemies;
     private List<Player> party;
-    private boolean      isExplore;
-    private int          epReward;
-    private int          goldReward;
-    private String       stageLabel;
-    private int          activeCharIdx = 0;
-    private String       pendingAction = null;
-    private Enemy        selectedTarget = null;
+    private boolean isExplore;
+    private int epReward;
+    private int goldReward;
+    private String stageLabel;
+    private int activeCharIdx = 0;
+    private String pendingAction = null;
+    private Enemy selectedTarget = null;
+    private boolean healerSkillMode = false;
 
     // UI components
-    private JLabel    titleLabel;
-    private JLabel    turnLabel;
-    private JPanel    enemyZone;
-    private JPanel    partyZone;
+    private JLabel titleLabel;
+    private JLabel turnLabel;
+    private JPanel enemyZone;
+    private JPanel partyZone;
     private JTextArea battleLog;
-    private JButton   btnAttack;
-    private JButton   btnSkill;
-    private JButton   btnUltimate;
+    private JButton btnAttack;
+    private JButton btnSkill;
+    private JButton btnUltimate;
 
     public BattlePanel(GameFrame frame) {
         this.frame = frame;
-        this.gs    = GameState.getInstance();
+        this.gs = GameState.getInstance();
         setBackground(UI.BG_DARK);
         setLayout(new BorderLayout(0, 0));
         buildHeader();
@@ -52,10 +53,10 @@ public class BattlePanel extends JPanel {
         header.setBorder(new EmptyBorder(10, 16, 10, 16));
 
         titleLabel = UI.label("Battle", UI.GOLD, new Font("Serif", Font.BOLD, 18));
-        turnLabel  = UI.label("Giliran Anda", UI.TEXT_DIM, UI.SMALL);
+        turnLabel = UI.label("Giliran Anda", UI.TEXT_DIM, UI.SMALL);
 
         header.add(titleLabel, BorderLayout.WEST);
-        header.add(turnLabel,  BorderLayout.EAST);
+        header.add(turnLabel, BorderLayout.EAST);
         add(header, BorderLayout.NORTH);
     }
 
@@ -97,7 +98,7 @@ public class BattlePanel extends JPanel {
         partySection.add(partyZone, BorderLayout.CENTER);
 
         arena.add(enemySection, BorderLayout.NORTH);
-        arena.add(logScroll,    BorderLayout.CENTER);
+        arena.add(logScroll, BorderLayout.CENTER);
         arena.add(partySection, BorderLayout.SOUTH);
         add(arena, BorderLayout.CENTER);
     }
@@ -108,15 +109,15 @@ public class BattlePanel extends JPanel {
         actions.setBackground(UI.BG_CARD);
         actions.setBorder(new EmptyBorder(10, 16, 10, 16));
 
-        btnAttack   = UI.actionButton("<html><center>⚔ Attack<br><font size='2'>Basic strike</font></center></html>",
-                UI.RED_LIGHT, new Color(200,64,64,120));
-        btnSkill    = UI.actionButton("<html><center>✦ Skill<br><font size='2'>Costs 20 MP</font></center></html>",
-                UI.BLUE_LIGHT, new Color(64,128,224,120));
+        btnAttack = UI.actionButton("<html><center>⚔ Attack<br><font size='2'>Basic strike</font></center></html>",
+                UI.RED_LIGHT, new Color(200, 64, 64, 120));
+        btnSkill = UI.actionButton("<html><center>✦ Skill<br><font size='2'>Costs 20 MP</font></center></html>",
+                UI.BLUE_LIGHT, new Color(64, 128, 224, 120));
         btnUltimate = UI.actionButton("<html><center>◈ Ultimate<br><font size='2'>Costs 50 MP</font></center></html>",
-                UI.PURPLE, new Color(107,79,160,120));
+                UI.PURPLE, new Color(107, 79, 160, 120));
 
-        btnAttack.addActionListener(e   -> playerAction("attack"));
-        btnSkill.addActionListener(e    -> playerAction("skill"));
+        btnAttack.addActionListener(e -> playerAction("attack"));
+        btnSkill.addActionListener(e -> playerAction("skill"));
         btnUltimate.addActionListener(e -> playerAction("ultimate"));
 
         actions.add(btnAttack);
@@ -127,14 +128,16 @@ public class BattlePanel extends JPanel {
 
     // ── INIT BATTLE ──────────────────────────────────────
     public void initBattle(String enemyConfig, String label, boolean explore, int epRew, int goldRew) {
-        this.stageLabel  = label;
-        this.isExplore   = explore;
-        this.epReward    = epRew;
-        this.goldReward  = goldRew;
+        this.stageLabel = label;
+        this.isExplore = explore;
+        this.epReward = epRew;
+        this.goldReward = goldRew;
         this.activeCharIdx = 0;
+        this.pendingAction = null;
+        this.healerSkillMode = false;
 
         gs.pulihkanParty();
-        this.party   = gs.party;
+        this.party = gs.party;
         this.enemies = gs.buatMusuh(enemyConfig);
 
         titleLabel.setText(label);
@@ -154,7 +157,8 @@ public class BattlePanel extends JPanel {
     private void renderEnemies() {
         enemyZone.removeAll();
         for (Enemy e : enemies) {
-            if (e.isAlive()) enemyZone.add(buildEnemyCard(e));
+            if (e.isAlive())
+                enemyZone.add(buildEnemyCard(e));
         }
         enemyZone.revalidate();
         enemyZone.repaint();
@@ -162,8 +166,9 @@ public class BattlePanel extends JPanel {
 
     private void renderParty() {
         partyZone.removeAll();
-        for (int i = 0; i < party.size(); i++) {
-            partyZone.add(buildPlayerCard(party.get(i), i == activeCharIdx));
+        Player activeChar = getActiveChar();
+        for (Player p : party) {
+            partyZone.add(buildPlayerCard(p, p == activeChar));
         }
         partyZone.revalidate();
         partyZone.repaint();
@@ -180,7 +185,7 @@ public class BattlePanel extends JPanel {
 
         JProgressBar hpBar = UI.bar((int) e.getHp(), (int) e.getMaxHp(), UI.HP_COLOR);
 
-        JLabel hpLbl = UI.label("HP: " + (int)e.getHp() + "/" + (int)e.getMaxHp(), UI.TEXT_DIM, UI.SMALL);
+        JLabel hpLbl = UI.label("HP: " + (int) e.getHp() + "/" + (int) e.getMaxHp(), UI.TEXT_DIM, UI.SMALL);
         hpLbl.setAlignmentX(CENTER_ALIGNMENT);
 
         card.add(name);
@@ -189,41 +194,40 @@ public class BattlePanel extends JPanel {
         card.add(Box.createVerticalStrut(2));
         card.add(hpLbl);
 
-        // Kalau sedang menunggu pilih target, ubah tampilan dan tambah klik
-        if (pendingAction != null) {
-
-            // Kasih border kuning sebagai tanda bisa diklik
-            card.setBorder(BorderFactory.createCompoundBorder(
-                    BorderFactory.createLineBorder(UI.GOLD, 2),
-                    new EmptyBorder(10, 12, 10, 12)
-            ));
-            card.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-            card.setBackground(new Color(50, 40, 20)); // sedikit highlight
-
-            // Tambah MouseListener supaya bisa diklik
-            card.addMouseListener(new java.awt.event.MouseAdapter() {
-                @Override
-                public void mouseClicked(java.awt.event.MouseEvent evt) {
-                    if (pendingAction != null) {
-                        executeAction(e); // jalankan aksi ke musuh ini
-                    }
-                }
-
-                // Efek hover — saat mouse masuk kartu
-                @Override
-                public void mouseEntered(java.awt.event.MouseEvent evt) {
-                    card.setBackground(new Color(70, 55, 20));
-                    card.repaint();
-                }
-
-                // Efek hover — saat mouse keluar kartu
-                @Override
-                public void mouseExited(java.awt.event.MouseEvent evt) {
-                    card.setBackground(new Color(50, 40, 20));
-                    card.repaint();
-                }
-            });
+        if (pendingAction == null || healerSkillMode) {
+            return card;
         }
+
+        // Kasih border kuning sebagai tanda bisa diklik
+        card.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(UI.GOLD, 2),
+                new EmptyBorder(10, 12, 10, 12)));
+        card.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        card.setBackground(new Color(50, 40, 20)); // sedikit highlight
+
+        // Tambah MouseListener supaya bisa diklik
+        card.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                if (pendingAction != null) {
+                    executeAction(e); // jalankan aksi ke musuh ini
+                }
+            }
+
+            // Efek hover — saat mouse masuk kartu
+            @Override
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                card.setBackground(new Color(70, 55, 20));
+                card.repaint();
+            }
+
+            // Efek hover — saat mouse keluar kartu
+            @Override
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                card.setBackground(new Color(50, 40, 20));
+                card.repaint();
+            }
+        });
         return card;
     }
 
@@ -233,8 +237,7 @@ public class BattlePanel extends JPanel {
         card.setBackground(isActive ? new Color(40, 34, 70) : UI.BG_PANEL);
         card.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(isActive ? UI.GOLD : UI.BORDER, isActive ? 2 : 1),
-                new EmptyBorder(8, 10, 8, 10)
-        ));
+                new EmptyBorder(8, 10, 8, 10)));
 
         JLabel name = UI.label(p.getNama(), isActive ? UI.GOLD_LIGHT : UI.TEXT, new Font("Serif", Font.BOLD, 12));
         name.setAlignmentX(CENTER_ALIGNMENT);
@@ -244,62 +247,114 @@ public class BattlePanel extends JPanel {
         JProgressBar hpBar = UI.bar((int) p.getHp(), (int) p.getMaxHp(), UI.HP_COLOR);
         JProgressBar mpBar = UI.bar((int) p.getMp(), (int) p.getMaxMp(), UI.MP_COLOR);
 
-        JLabel hpLbl = UI.label("HP " + (int)p.getHp(), UI.TEXT_DIM, new Font("SansSerif", Font.PLAIN, 10));
-        JLabel mpLbl = UI.label("MP " + (int)p.getMp(), UI.TEXT_DIM, new Font("SansSerif", Font.PLAIN, 10));
+        JLabel hpLbl = UI.label("HP " + (int) p.getHp(), UI.TEXT_DIM, new Font("SansSerif", Font.PLAIN, 10));
+        JLabel mpLbl = UI.label("MP " + (int) p.getMp(), UI.TEXT_DIM, new Font("SansSerif", Font.PLAIN, 10));
 
         card.add(name);
         card.add(role);
         card.add(Box.createVerticalStrut(6));
-        card.add(hpBar); card.add(hpLbl);
+        card.add(hpBar);
+        card.add(hpLbl);
         card.add(Box.createVerticalStrut(3));
-        card.add(mpBar); card.add(mpLbl);
+        card.add(mpBar);
+        card.add(mpLbl);
 
         if (!p.isAlive()) {
-            card.setBackground(new Color(60,20,20));
+            card.setBackground(new Color(60, 20, 20));
             name.setText(p.getNama() + " ✝");
-            name.setForeground(new Color(120,80,80));
+            name.setForeground(new Color(120, 80, 80));
         }
+
+        // Target selection untuk Healer skill
+        boolean isHealerSkillMode = healerSkillMode;
+
+        if (isHealerSkillMode && p.isAlive()) {
+            Color normalHealTargetColor = new Color(40, 40, 80);
+            Color hoverHealTargetColor = new Color(64, 72, 120);
+            card.setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createLineBorder(UI.GOLD, 2),
+                    new EmptyBorder(8, 10, 8, 10)));
+            card.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+            card.setBackground(normalHealTargetColor);
+            card.setToolTipText("Klik untuk heal " + p.getNama());
+
+            card.addMouseListener(new java.awt.event.MouseAdapter() {
+                @Override
+                public void mouseClicked(java.awt.event.MouseEvent evt) {
+                    executeAction(p);
+                }
+
+                @Override
+                public void mouseEntered(java.awt.event.MouseEvent evt) {
+                    card.setBackground(hoverHealTargetColor);
+                    card.setBorder(BorderFactory.createCompoundBorder(
+                            BorderFactory.createLineBorder(UI.GOLD_LIGHT, 2),
+                            new EmptyBorder(8, 10, 8, 10)));
+                    card.repaint();
+                }
+
+                @Override
+                public void mouseExited(java.awt.event.MouseEvent evt) {
+                    card.setBackground(normalHealTargetColor);
+                    card.setBorder(BorderFactory.createCompoundBorder(
+                            BorderFactory.createLineBorder(UI.GOLD, 2),
+                            new EmptyBorder(8, 10, 8, 10)));
+                    card.repaint();
+                }
+            });
+        }
+
         return card;
     }
 
     // ── PLAYER ACTION ────────────────────────────────────
     private void playerAction(String type) {
-        List<Player> aliveParty   = getAliveParty();
-        List<Enemy>  aliveEnemies = getAliveEnemies();
-        if (aliveParty.isEmpty() || aliveEnemies.isEmpty()) return;
+        List<Player> aliveParty = getAliveParty();
+        List<Enemy> aliveEnemies = getAliveEnemies();
+        if (aliveParty.isEmpty() || aliveEnemies.isEmpty())
+            return;
 
         Player activeChar = aliveParty.get(activeCharIdx % aliveParty.size());
 
-        // Kalau Healer pakai skill/ultimate → langsung eksekusi, tidak perlu pilih musuh
-        if (activeChar instanceof Healer && (type.equals("skill") || type.equals("ultimate"))) {
+        // Kalau Healer pakai ultimate → langsung eksekusi (party wide heal)
+        if (activeChar instanceof Healer && type.equals("ultimate")) {
             pendingAction = type;
-            executeAction(aliveEnemies.get(0)); // target tidak dipakai untuk Healer skill/ultimate
+            healerSkillMode = false;
+            executeAction(aliveEnemies.get(0));
             return;
         }
 
-
-
-//        JIka musuh hanya tersisa 1, langsung eksekusi
-        if(aliveEnemies.size() == 1) {
+        // Kalau Healer pakai skill → pilih ally
+        if (activeChar instanceof Healer && type.equals("skill")) {
             pendingAction = type;
+            healerSkillMode = true;
+            setActionsEnabled(false);
+            turnLabel.setText("Pilih hero untuk disembuhkan!");
+            renderAll();
+            return;
+        }
+
+        // Jika musuh hanya tersisa 1, langsung eksekusi (untuk attack/skill non-healer)
+        if (aliveEnemies.size() == 1) {
+            pendingAction = type;
+            healerSkillMode = false;
             executeAction(aliveEnemies.get(0));
             return;
         }
 
         // Kalau musuh lebih dari 1, simpan aksi dan tunggu player klik musuh
         pendingAction = type;
+        healerSkillMode = false;
         setActionsEnabled(false);
         turnLabel.setText("Pilih target musuh!");
         renderEnemies(); // render ulang supaya kartu musuh berubah jadi bisa diklik
-
     }
 
-    private void executeAction(Enemy target) {
-        List<Player> aliveParty   = getAliveParty();
-        List<Enemy>  aliveEnemies = getAliveEnemies();
+    private void executeAction(entity.Entity target) {
+        List<Player> aliveParty = getAliveParty();
+        List<Enemy> aliveEnemies = getAliveEnemies();
 
         Player activeChar = aliveParty.get(activeCharIdx % aliveParty.size());
-
 
         setActionsEnabled(false);
         String hasil;
@@ -308,15 +363,8 @@ public class BattlePanel extends JPanel {
                 hasil = activeChar.attack(target);
                 break;
             case "skill":
-                if (activeChar instanceof Healer) {
-                    // Healer skill: sembuhkan ally dengan HP terendah
-                    Player lowestHp = aliveParty.stream()
-                            .min((a,b) -> Double.compare(a.getHp()/a.getMaxHp(), b.getHp()/b.getMaxHp()))
-                            .orElse(activeChar);
-                    hasil = activeChar.skill(lowestHp);
-                } else {
-                    hasil = activeChar.skill(target);
-                }
+                // Healer skill sekarang menggunakan target yang dipilih
+                hasil = activeChar.skill(target);
                 break;
             case "ultimate":
                 if (activeChar instanceof Healer) {
@@ -331,26 +379,28 @@ public class BattlePanel extends JPanel {
                 hasil = activeChar.attack(target);
         }
 
-        pendingAction  = null;
+        pendingAction = null;
         selectedTarget = null;
+        healerSkillMode = false;
 
         log("▶ " + hasil);
-        if (!target.isAlive()) log("  ✦ " + target.getNama() + " dikalahkan!");
+        if (!target.isAlive())
+            log("  ✦ " + target.getNama() + " dikalahkan!");
 
-        renderAll();
-        if (checkBattleEnd()) return;
+        if (checkBattleEnd())
+            return;
 
-        // Advance character turn
+        // Advance character turn once, then render the next active character.
         activeCharIdx = (activeCharIdx + 1) % aliveParty.size();
         updateTurnLabel();
+        renderAll();
 
-        // Enemy turn after small delay when all chars have acted
+        // Enemy turn after small delay.
         Timer timer = new Timer(700, e2 -> {
             enemyTurn();
-            renderAll();
             if (!checkBattleEnd()) {
-                activeCharIdx = (activeCharIdx + 1 ) % getAliveParty().size();
                 updateTurnLabel();
+                renderAll();
                 setActionsEnabled(true);
             }
         });
@@ -360,21 +410,27 @@ public class BattlePanel extends JPanel {
 
     // ── ENEMY TURN ───────────────────────────────────────
     private void enemyTurn() {
-        List<Player> aliveParty   = getAliveParty();
-        List<Enemy>  aliveEnemies = getAliveEnemies();
-        if (aliveParty.isEmpty() || aliveEnemies.isEmpty()) return;
+        List<Player> aliveParty = getAliveParty();
+        List<Enemy> aliveEnemies = getAliveEnemies();
+        if (aliveParty.isEmpty() || aliveEnemies.isEmpty())
+            return;
 
         log("--- Giliran Musuh ---");
         for (Enemy e : aliveEnemies) {
-            if (aliveParty.isEmpty()) break;
+            if (aliveParty.isEmpty())
+                break;
             Player target = aliveParty.get(new Random().nextInt(aliveParty.size()));
             int roll = new Random().nextInt(3);
             String hasil;
-            if (roll == 0) hasil = e.attack(target);
-            else if (roll == 1) hasil = e.skill(target);
-            else hasil = e.ultimate(target);
+            if (roll == 0)
+                hasil = e.attack(target);
+            else if (roll == 1)
+                hasil = e.skill(target);
+            else
+                hasil = e.ultimate(target);
             log("  " + hasil);
-            if (!target.isAlive()) log("  ✦ " + target.getNama() + " gugur!");
+            if (!target.isAlive())
+                log("  ✦ " + target.getNama() + " gugur!");
         }
     }
 
@@ -393,7 +449,7 @@ public class BattlePanel extends JPanel {
 
     private void onVictory() {
         if (!isExplore) {
-            gs.gold             += goldReward;
+            gs.gold += goldReward;
             gs.explorationPoint += epReward;
             gs.currentStage++;
             gs.totalStageClear++;
@@ -401,11 +457,11 @@ public class BattlePanel extends JPanel {
                     "Stage selesai!\n+" + epReward + " Exploration Points\n+" + goldReward + " Gold",
                     true);
         } else {
-            int ep  = 15 + new Random().nextInt(20);
+            int ep = 15 + new Random().nextInt(20);
             int gld = 20 + new Random().nextInt(30);
             gs.explorationPoint += ep;
-            gs.gold             += gld;
-            gs.monsterSlain     += enemies.size();
+            gs.gold += gld;
+            gs.monsterSlain += enemies.size();
             gs.runs++;
             showResult("★ MENANG! ★", "+" + ep + " EP\n+" + gld + " Gold", true);
         }
@@ -425,8 +481,7 @@ public class BattlePanel extends JPanel {
                 body + "\n\nKembali ke menu sebelumnya?",
                 title,
                 JOptionPane.DEFAULT_OPTION,
-                win ? JOptionPane.INFORMATION_MESSAGE : JOptionPane.WARNING_MESSAGE
-        );
+                win ? JOptionPane.INFORMATION_MESSAGE : JOptionPane.WARNING_MESSAGE);
 
         frame.showPanel(isExplore ? GameFrame.EXPLORATION : GameFrame.CAMPAIGN);
     }
@@ -451,10 +506,18 @@ public class BattlePanel extends JPanel {
         btnUltimate.setEnabled(en);
     }
 
-    private List<Player> getAliveParty()   {
+    private List<Player> getAliveParty() {
         return party.stream().filter(Player::isAlive).collect(java.util.stream.Collectors.toList());
     }
-    private List<Enemy> getAliveEnemies()  {
+
+    private Player getActiveChar() {
+        List<Player> alive = getAliveParty();
+        if (alive.isEmpty())
+            return null;
+        return alive.get(activeCharIdx % alive.size());
+    }
+
+    private List<Enemy> getAliveEnemies() {
         return enemies.stream().filter(Enemy::isAlive).collect(java.util.stream.Collectors.toList());
     }
 }
