@@ -3,6 +3,8 @@ package gui;
 import javax.swing.*;
 import javax.swing.border.Border;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
 public class UI {
     // Palette
@@ -46,11 +48,13 @@ public class UI {
         JButton b = new JButton(text);
         b.setFont(new Font("Serif", Font.BOLD, 13));
         b.setForeground(GOLD);
-        b.setBackground(new Color(201,162,39,30));
+        b.setBackground(new Color(45, 38, 75)); // Solid color to avoid alpha glitches
         b.setBorder(BorderFactory.createLineBorder(GOLD, 1));
         b.setFocusPainted(false);
         b.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         b.setOpaque(true);
+
+        applyHoverEffect(b, new Color(60, 50, 100), GOLD_LIGHT, BorderFactory.createLineBorder(GOLD_LIGHT, 1));
         return b;
     }
 
@@ -63,7 +67,38 @@ public class UI {
         b.setFocusPainted(false);
         b.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         b.setOpaque(true);
+
+        Color hoverBg = new Color(Math.min(255, BG_PANEL.getRed() + 20),
+                                  Math.min(255, BG_PANEL.getGreen() + 20),
+                                  Math.min(255, BG_PANEL.getBlue() + 30));
+        applyHoverEffect(b, hoverBg, fg.brighter(), BorderFactory.createLineBorder(fg, 2));
         return b;
+    }
+
+    private static void applyHoverEffect(JButton b, Color hoverBg, Color hoverFg, Border hoverBorder) {
+        Color normalBg = b.getBackground();
+        Color normalFg = b.getForeground();
+        Border normalBorder = b.getBorder();
+
+        b.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                if (b.isEnabled()) {
+                    b.setBackground(hoverBg);
+                    b.setForeground(hoverFg);
+                    b.setBorder(hoverBorder);
+                }
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                if (b.isEnabled()) {
+                    b.setBackground(normalBg);
+                    b.setForeground(normalFg);
+                    b.setBorder(normalBorder);
+                }
+            }
+        });
     }
 
     /** Simple HP/MP bar as a JProgressBar */

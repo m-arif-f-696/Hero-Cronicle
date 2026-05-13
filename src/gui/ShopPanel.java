@@ -22,7 +22,7 @@ public class ShopPanel extends JPanel {
     }
 
     private void buildHeader() {
-        JPanel header = new JPanel(new BorderLayout());
+        JPanel header = new JPanel(new BorderLayout(15, 0));
         header.setBackground(UI.BG_CARD);
         header.setBorder(new EmptyBorder(12, 18, 12, 18));
 
@@ -30,6 +30,8 @@ public class ShopPanel extends JPanel {
         back.addActionListener(e -> frame.showPanel(GameFrame.MAIN_MENU));
 
         JLabel title = UI.label("Shop", UI.GOLD, new Font("Serif", Font.BOLD, 20));
+        title.setHorizontalAlignment(SwingConstants.CENTER);
+
         goldLabel    = UI.label("Gold: 0", UI.GOLD, UI.SMALL);
 
         header.add(back,      BorderLayout.WEST);
