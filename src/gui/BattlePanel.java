@@ -22,6 +22,8 @@ public class BattlePanel extends JPanel {
     private int          goldReward;
     private String       stageLabel;
     private int          activeCharIdx = 0;
+    private String       pendingAction = null;
+    private Enemy        selectedTarget = null;
 
     // UI components
     private JLabel    titleLabel;
@@ -186,6 +188,42 @@ public class BattlePanel extends JPanel {
         card.add(hpBar);
         card.add(Box.createVerticalStrut(2));
         card.add(hpLbl);
+
+        // Kalau sedang menunggu pilih target, ubah tampilan dan tambah klik
+        if (pendingAction != null) {
+
+            // Kasih border kuning sebagai tanda bisa diklik
+            card.setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createLineBorder(UI.GOLD, 2),
+                    new EmptyBorder(10, 12, 10, 12)
+            ));
+            card.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+            card.setBackground(new Color(50, 40, 20)); // sedikit highlight
+
+            // Tambah MouseListener supaya bisa diklik
+            card.addMouseListener(new java.awt.event.MouseAdapter() {
+                @Override
+                public void mouseClicked(java.awt.event.MouseEvent evt) {
+                    if (pendingAction != null) {
+                        executeAction(e); // jalankan aksi ke musuh ini
+                    }
+                }
+
+                // Efek hover — saat mouse masuk kartu
+                @Override
+                public void mouseEntered(java.awt.event.MouseEvent evt) {
+                    card.setBackground(new Color(70, 55, 20));
+                    card.repaint();
+                }
+
+                // Efek hover — saat mouse keluar kartu
+                @Override
+                public void mouseExited(java.awt.event.MouseEvent evt) {
+                    card.setBackground(new Color(50, 40, 20));
+                    card.repaint();
+                }
+            });
+        }
         return card;
     }
 
@@ -231,11 +269,41 @@ public class BattlePanel extends JPanel {
         if (aliveParty.isEmpty() || aliveEnemies.isEmpty()) return;
 
         Player activeChar = aliveParty.get(activeCharIdx % aliveParty.size());
-        Enemy  target     = aliveEnemies.get(new Random().nextInt(aliveEnemies.size()));
+
+        // Kalau Healer pakai skill/ultimate → langsung eksekusi, tidak perlu pilih musuh
+        if (activeChar instanceof Healer && (type.equals("skill") || type.equals("ultimate"))) {
+            pendingAction = type;
+            executeAction(aliveEnemies.get(0)); // target tidak dipakai untuk Healer skill/ultimate
+            return;
+        }
+
+
+
+//        JIka musuh hanya tersisa 1, langsung eksekusi
+        if(aliveEnemies.size() == 1) {
+            pendingAction = type;
+            executeAction(aliveEnemies.get(0));
+            return;
+        }
+
+        // Kalau musuh lebih dari 1, simpan aksi dan tunggu player klik musuh
+        pendingAction = type;
+        setActionsEnabled(false);
+        turnLabel.setText("Pilih target musuh!");
+        renderEnemies(); // render ulang supaya kartu musuh berubah jadi bisa diklik
+
+    }
+
+    private void executeAction(Enemy target) {
+        List<Player> aliveParty   = getAliveParty();
+        List<Enemy>  aliveEnemies = getAliveEnemies();
+
+        Player activeChar = aliveParty.get(activeCharIdx % aliveParty.size());
+
 
         setActionsEnabled(false);
         String hasil;
-        switch (type) {
+        switch (pendingAction) {
             case "attack":
                 hasil = activeChar.attack(target);
                 break;
@@ -263,6 +331,9 @@ public class BattlePanel extends JPanel {
                 hasil = activeChar.attack(target);
         }
 
+        pendingAction  = null;
+        selectedTarget = null;
+
         log("▶ " + hasil);
         if (!target.isAlive()) log("  ✦ " + target.getNama() + " dikalahkan!");
 
@@ -278,7 +349,7 @@ public class BattlePanel extends JPanel {
             enemyTurn();
             renderAll();
             if (!checkBattleEnd()) {
-                activeCharIdx = 0;
+                activeCharIdx = (activeCharIdx + 1 ) % getAliveParty().size();
                 updateTurnLabel();
                 setActionsEnabled(true);
             }
