@@ -5,9 +5,9 @@ public abstract class Entity {
     protected String tipe;
     protected double hp;
     protected double maxHp;
-    protected double speed;
+    protected int speed;
 
-    public Entity(String nama, String tipe, double hp, double speed) {
+    public Entity(String nama, String tipe, double hp, int speed) {
         this.nama  = nama;
         this.tipe  = tipe;
         this.hp    = hp;

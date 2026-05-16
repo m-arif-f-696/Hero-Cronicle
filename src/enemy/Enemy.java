@@ -9,8 +9,8 @@ public abstract class Enemy extends Entity {
     protected int    expReward;
     protected int    goldReward;
 
-    public Enemy(String nama, String tipe, double hp, double atkPower, double defPower, int expReward, int goldReward) {
-        super(nama, tipe, hp);
+    public Enemy(String nama, String tipe, double hp, double atkPower, double defPower, int expReward, int goldReward, int speed) {
+        super(nama, tipe, hp, speed);
         this.atkPower   = atkPower;
         this.defPower   = defPower;
         this.expReward  = expReward;

@@ -5,7 +5,7 @@ import entity.Entity;
 public class LargeEnemy extends Enemy {
 
     public LargeEnemy(String nama) {
-        super(nama, "Large Enemy", 220, 22, 15, 50, 70);
+        super(nama, "Large Enemy", 220, 22, 15, 50, 70, 50);
     }
 
     @Override
