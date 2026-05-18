@@ -7,7 +7,7 @@ public abstract class Entity implements BattleActions {
     protected double maxHp;
     protected int speed;
 
-    public Entity(String nama, String tipe, double hp) {
+    public Entity(String nama, String tipe, double hp, int speed) {
         this.nama = nama;
         this.tipe = tipe;
         this.hp = hp;
@@ -39,4 +39,7 @@ public abstract class Entity implements BattleActions {
         return hp > 0;
     }
 
+    public int getSpeed() {
+        return speed;
+    }
 }

@@ -56,7 +56,7 @@ public class BattlePanel extends JPanel {
         turnQueue.addAll(getAliveParty());
         turnQueue.addAll(getAliveEnemies());
 
-        turnQueue.sort((a, b) -> Integer.compare(b.getSpeed(), a.getSpeed());
+        turnQueue.sort((a, b) -> Integer.compare(b.getSpeed(), a.getSpeed()));
 
         turnIdx = 0;
     }
