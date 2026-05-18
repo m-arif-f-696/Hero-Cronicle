@@ -5,12 +5,14 @@ public abstract class Entity implements BattleActions {
     protected String tipe;
     protected double hp;
     protected double maxHp;
+    protected int speed;
 
     public Entity(String nama, String tipe, double hp) {
         this.nama = nama;
         this.tipe = tipe;
         this.hp = hp;
         this.maxHp = hp;
+        this.speed = speed;
     }
 
     public String getNama() {

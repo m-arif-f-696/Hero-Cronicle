@@ -15,8 +15,8 @@ public abstract class Player extends Entity {
     protected Level  levelObj;
     protected List<Items> inventory;
 
-    public Player(String nama, String tipe, double hp, double mp, double atkPower, double defPower) {
-        super(nama, tipe, hp);
+    public Player(String nama, String tipe, double hp, double mp, double atkPower, double defPower, int speed) {
+        super(nama, tipe, hp, speed);
         this.mp        = mp;
         this.maxMp     = mp;
         this.atkPower  = atkPower;

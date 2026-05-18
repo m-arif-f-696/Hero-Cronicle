@@ -5,7 +5,7 @@ import entity.Entity;
 public class Swordman extends Player {
 
     public Swordman(String nama) {
-        super(nama, "Swordman", 240, 90, 28, 20);
+        super(nama, "Swordman", 240, 90, 28, 20, 65);
     }
 
     @Override

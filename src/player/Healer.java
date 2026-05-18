@@ -6,7 +6,7 @@ import java.util.List;
 public class Healer extends Player {
 
     public Healer(String nama) {
-        super(nama, "Healer", 200, 160, 12, 16);
+        super(nama, "Healer", 200, 160, 12, 16, 45);
     }
 
     @Override

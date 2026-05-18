@@ -7,7 +7,7 @@ import java.util.List;
 public class Tank extends Player {
 
     public Tank(String nama) {
-        super(nama, "Tank", 380, 70, 18, 35);
+        super(nama, "Tank", 380, 70, 18, 35, 30);
     }
 
     @Override
