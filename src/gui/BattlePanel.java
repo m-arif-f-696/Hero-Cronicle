@@ -3,10 +3,12 @@ package gui;
 import battle.GameState;
 import enemy.Enemy;
 import player.*;
+import entity.Entity;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
@@ -21,7 +23,8 @@ public class BattlePanel extends JPanel {
     private int          epReward;
     private int          goldReward;
     private String       stageLabel;
-    private int          activeCharIdx = 0;
+    private List<Entity> turnQueue = new ArrayList<>();
+    private int          turnIdx = 0;
     private String       pendingAction = null;
     private Enemy        selectedTarget = null;
 
@@ -45,6 +48,30 @@ public class BattlePanel extends JPanel {
         buildActions();
     }
 
+    // ── TURN QUEUE ───────────────────────────────────────────
+
+    private void buildTurnQueue(){
+        turnQueue.clear();
+        turnQueue.addAll(getAliveParty());
+        turnQueue.addAll(getAliveEnemies());
+
+        turnQueue.sort((a, b) -> Integer.compare(b.getSpeed(), a.getSpeed());
+
+        turnIdx = 0;
+    }
+
+    private Entity getCurrentEntity() {
+        while (turnIdx < turnQueue.size() && !turnQueue.get(turnIdx).isAlive()) {
+            turnIdx++;
+        }
+
+        // Kalau antrian habis, buat antrian baru
+        if (turnIdx >= turnQueue.size()) {
+            buildTurnQueue();
+        }
+
+        return turnQueue.get(turnIdx);
+    }
     // ── HEADER ───────────────────────────────────────────
     private void buildHeader() {
         JPanel header = new JPanel(new BorderLayout(12, 0));
@@ -131,19 +158,56 @@ public class BattlePanel extends JPanel {
         this.isExplore   = explore;
         this.epReward    = epRew;
         this.goldReward  = goldRew;
-        this.activeCharIdx = 0;
 
         gs.pulihkanParty();
         this.party   = gs.party;
         this.enemies = gs.buatMusuh(enemyConfig);
 
+        buildTurnQueue();
+
         titleLabel.setText(label);
         battleLog.setText("");
         log("⚔ Pertempuran dimulai!");
+        log("Urutan giliran: " + getTurnOrderString());
         setActionsEnabled(true);
         renderAll();
         updateTurnLabel();
+
+        processTurn();
     }
+    private String getTurnOrderString() {
+        StringBuilder sb = new StringBuilder();
+        for (entity.Entity e : turnQueue) {
+            sb.append(e.getNama()).append("(").append(e.getSpeed()).append(") → ");
+        }
+        return sb.toString();
+    }
+    private void processTurn() {
+        if (checkBattleEnd()) return;
+
+        entity.Entity current = getCurrentEntity();
+
+        // Kalau giliran musuh → langsung eksekusi otomatis
+        if (current instanceof Enemy) {
+            updateTurnLabel();
+            Timer timer = new Timer(700, e -> {
+                enemyTurnSingle((Enemy) current);
+                renderAll();
+                turnIdx++;
+                processTurn(); // lanjut ke giliran berikutnya
+            });
+            timer.setRepeats(false);
+            timer.start();
+
+            // Kalau giliran player → tunggu input
+        } else if (current instanceof Player) {
+            updateTurnLabel();
+            setActionsEnabled(true);
+            renderParty();
+        }
+    }
+
+
 
     // ── RENDER ───────────────────────────────────────────
     private void renderAll() {
@@ -162,8 +226,10 @@ public class BattlePanel extends JPanel {
 
     private void renderParty() {
         partyZone.removeAll();
+        entity.Entity current = getCurrentEntity();
         for (int i = 0; i < party.size(); i++) {
-            partyZone.add(buildPlayerCard(party.get(i), i == activeCharIdx));
+            boolean isActive = party.get(i) == current; // cek apakah ini yang giliran sekarang
+            partyZone.add(buildPlayerCard(party.get(i), isActive));
         }
         partyZone.revalidate();
         partyZone.repaint();
@@ -268,7 +334,7 @@ public class BattlePanel extends JPanel {
         List<Enemy>  aliveEnemies = getAliveEnemies();
         if (aliveParty.isEmpty() || aliveEnemies.isEmpty()) return;
 
-        Player activeChar = aliveParty.get(activeCharIdx % aliveParty.size());
+        Player activeChar = (Player) getCurrentEntity();
 
         // Kalau Healer pakai skill/ultimate → langsung eksekusi, tidak perlu pilih musuh
         if (activeChar instanceof Healer && (type.equals("skill") || type.equals("ultimate"))) {
@@ -298,7 +364,7 @@ public class BattlePanel extends JPanel {
         List<Player> aliveParty   = getAliveParty();
         List<Enemy>  aliveEnemies = getAliveEnemies();
 
-        Player activeChar = aliveParty.get(activeCharIdx % aliveParty.size());
+        Player activeChar = (Player) getCurrentEntity();
 
 
         setActionsEnabled(false);
@@ -340,42 +406,25 @@ public class BattlePanel extends JPanel {
         renderAll();
         if (checkBattleEnd()) return;
 
-        // Advance character turn
-        activeCharIdx = (activeCharIdx + 1) % aliveParty.size();
-        updateTurnLabel();
-
-        // Enemy turn after small delay when all chars have acted
-        Timer timer = new Timer(700, e2 -> {
-            enemyTurn();
-            renderAll();
-            if (!checkBattleEnd()) {
-                activeCharIdx = (activeCharIdx + 1 ) % getAliveParty().size();
-                updateTurnLabel();
-                setActionsEnabled(true);
-            }
-        });
-        timer.setRepeats(false);
-        timer.start();
+        // Lanjut ke giliran berikutnya
+        turnIdx++;
+        processTurn();
     }
 
     // ── ENEMY TURN ───────────────────────────────────────
-    private void enemyTurn() {
-        List<Player> aliveParty   = getAliveParty();
-        List<Enemy>  aliveEnemies = getAliveEnemies();
-        if (aliveParty.isEmpty() || aliveEnemies.isEmpty()) return;
+    private void enemyTurnSingle(Enemy e) {
+        List<Player> aliveParty = getAliveParty();
+        if (aliveParty.isEmpty()) return;
 
-        log("--- Giliran Musuh ---");
-        for (Enemy e : aliveEnemies) {
-            if (aliveParty.isEmpty()) break;
-            Player target = aliveParty.get(new Random().nextInt(aliveParty.size()));
-            int roll = new Random().nextInt(3);
-            String hasil;
-            if (roll == 0) hasil = e.attack(target);
-            else if (roll == 1) hasil = e.skill(target);
-            else hasil = e.ultimate(target);
-            log("  " + hasil);
-            if (!target.isAlive()) log("  ✦ " + target.getNama() + " gugur!");
-        }
+        Player target = aliveParty.get(new Random().nextInt(aliveParty.size()));
+        int roll = new Random().nextInt(3);
+        String hasil;
+        if (roll == 0)      hasil = e.attack(target);
+        else if (roll == 1) hasil = e.skill(target);
+        else                hasil = e.ultimate(target);
+
+        log("  " + hasil);
+        if (!target.isAlive()) log("  ✦ " + target.getNama() + " gugur!");
     }
 
     // ── CHECK END ────────────────────────────────────────
@@ -438,10 +487,11 @@ public class BattlePanel extends JPanel {
     }
 
     private void updateTurnLabel() {
-        List<Player> alive = getAliveParty();
-        if (!alive.isEmpty()) {
-            Player cur = alive.get(activeCharIdx % alive.size());
-            turnLabel.setText("Giliran: " + cur.getNama() + " (" + cur.getTipe() + ")");
+        entity.Entity current = getCurrentEntity();
+        if (current instanceof Player) {
+            turnLabel.setText("Giliran: " + current.getNama() + " (" + current.getTipe() + ")");
+        } else {
+            turnLabel.setText("Giliran Musuh: " + current.getNama());
         }
     }
 
