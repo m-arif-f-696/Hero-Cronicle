@@ -2,12 +2,14 @@ package enemy;
 
 import entity.Entity;
 import player.Player;
+import sound.Sound;
 
 public abstract class Enemy extends Entity {
     protected double atkPower;
     protected double defPower;
     protected int    expReward;
     protected int    goldReward;
+    protected Sound sfx = new Sound();
 
     public Enemy(String nama, String tipe, double hp, double atkPower, double defPower, int expReward, int goldReward, int speed) {
         super(nama, tipe, hp, speed);
@@ -20,6 +22,11 @@ public abstract class Enemy extends Entity {
     protected double hitungDamage(double base, Entity target) {
         double def = (target instanceof Player) ? ((Player) target).getDefPower() : 0;
         return Math.max(5, base - def * 0.3);
+    }
+
+    public void playSFX(int id){
+        sfx.setFile(id);
+        sfx.play();
     }
 
     public int    getExpReward()  { return expReward; }

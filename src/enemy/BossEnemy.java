@@ -1,6 +1,7 @@
 package enemy;
 
 import entity.Entity;
+import sound.Sound;
 
 public class BossEnemy extends Enemy {
 
@@ -12,6 +13,7 @@ public class BossEnemy extends Enemy {
     public String attack(Entity target) {
         double dmg = hitungDamage(atkPower, target);
         target.setHp(target.getHp() - dmg);
+        playSFX(Sound.ENEMY_ATTACK);
         return nama + " [BOSS] — Dark Claw! (" + (int)dmg + " DMG)";
     }
 
@@ -19,6 +21,7 @@ public class BossEnemy extends Enemy {
     public String skill(Entity target) {
         double dmg = hitungDamage(atkPower * 2.0, target);
         target.setHp(target.getHp() - dmg);
+        playSFX(Sound.ENEMY_ATTACK);
         return nama + " [BOSS] — Soul Drain! (" + (int)dmg + " DMG)";
     }
 
@@ -26,6 +29,7 @@ public class BossEnemy extends Enemy {
     public String ultimate(Entity target) {
         double dmg = hitungDamage(atkPower * 3.5, target);
         target.setHp(target.getHp() - dmg);
+        playSFX(Sound.ENEMY_ATTACK);
         return "⚠ " + nama + " [BOSS] — ★ CHAOS NOVA! (" + (int)dmg + " DMG ULTIMATE!)";
     }
 }

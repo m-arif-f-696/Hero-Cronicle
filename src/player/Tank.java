@@ -2,6 +2,8 @@ package player;
 
 import enemy.Enemy;
 import entity.Entity;
+import sound.Sound;
+
 import java.util.List;
 
 public class Tank extends Player {
@@ -14,6 +16,7 @@ public class Tank extends Player {
     public String attack(Entity target) {
         double dmg = hitungDamage(atkPower);
         target.setHp(target.getHp() - dmg);
+        playSFX(Sound.PLAYER_ATTACK);
         return nama + " [Tank] — Shield Bash! (" + (int)dmg + " DMG)";
     }
 
@@ -22,6 +25,7 @@ public class Tank extends Player {
         if (mp < 20) return nama + " tidak cukup MP untuk Skill!";
         mp -= 20;
         defPower += 15;
+        playSFX(Sound.TANK_SKILL);
         return nama + " [Tank] — Iron Fortress! DEF +" + 15 + " (Total: " + (int)defPower + ") [-20 MP]";
     }
 
@@ -31,6 +35,7 @@ public class Tank extends Player {
         mp -= 50;
         double dmg = hitungDamage(atkPower * 2.0);
         target.setHp(target.getHp() - dmg);
+        playSFX(Sound.TANK_SKILL);
         return nama + " [Tank] — ★ EARTHBREAKER! (" + (int)dmg + " DMG) [-50 MP]";
     }
 
@@ -45,6 +50,7 @@ public class Tank extends Player {
                 sb.append("  → ").append(e.getNama()).append(" terkena ").append((int)dmg).append(" DMG\n");
             }
         }
+        playSFX(Sound.TANK_SKILL);
         return sb.toString().trim();
     }
 }

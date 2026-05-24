@@ -1,6 +1,7 @@
 package player;
 
 import entity.Entity;
+import sound.Sound;
 
 public class Assassin extends Player {
 
@@ -12,6 +13,7 @@ public class Assassin extends Player {
     public String attack(Entity target) {
         double dmg = hitungDamage(atkPower + 5);
         target.setHp(target.getHp() - dmg);
+        playSFX(Sound.PLAYER_ATTACK);
         return nama + " [Assassin] menyerang " + target.getNama() + " — Shadow Strike! (" + (int)dmg + " DMG)";
     }
 
@@ -21,6 +23,7 @@ public class Assassin extends Player {
         mp -= 20;
         double dmg = hitungDamage(atkPower * 1.8);
         target.setHp(target.getHp() - dmg);
+        playSFX(Sound.ASSASIN_SKILL);
         return nama + " [Assassin] — Blade Rush! (" + (int)dmg + " DMG) [-20 MP]";
     }
 
@@ -30,6 +33,7 @@ public class Assassin extends Player {
         mp -= 50;
         double dmg = hitungDamage(atkPower * 3.0);
         target.setHp(target.getHp() - dmg);
+        playSFX(Sound.ASSASIN_SKILL);
         return nama + " [Assassin] — ★ DEATH MARK! (" + (int)dmg + " DMG KRITIS!) [-50 MP]";
     }
 }

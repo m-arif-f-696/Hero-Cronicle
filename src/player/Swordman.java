@@ -1,6 +1,7 @@
 package player;
 
 import entity.Entity;
+import sound.Sound;
 
 public class Swordman extends Player {
 
@@ -12,6 +13,7 @@ public class Swordman extends Player {
     public String attack(Entity target) {
         double dmg = hitungDamage(atkPower + 8);
         target.setHp(target.getHp() - dmg);
+        playSFX(Sound.PLAYER_ATTACK);
         return nama + " [Swordman] — Quick Slash! (" + (int)dmg + " DMG)";
     }
 
@@ -21,6 +23,7 @@ public class Swordman extends Player {
         mp -= 20;
         double dmg = hitungDamage(atkPower * 2.0);
         target.setHp(target.getHp() - dmg);
+        playSFX(Sound.SWORDMAN_SKILL);
         return nama + " [Swordman] — Blade Dance! (" + (int)dmg + " DMG) [-20 MP]";
     }
 
@@ -30,6 +33,7 @@ public class Swordman extends Player {
         mp -= 50;
         double dmg = hitungDamage(atkPower * 3.5);
         target.setHp(target.getHp() - dmg);
+        playSFX(Sound.SWORDMAN_SKILL);
         return nama + " [Swordman] — ★ TEMPEST SLASH! (" + (int)dmg + " DMG) [-50 MP]";
     }
 }

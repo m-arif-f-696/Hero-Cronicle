@@ -3,6 +3,7 @@ package player;
 import entity.Entity;
 import items.Items;
 import level.Level;
+import sound.Sound;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -14,6 +15,12 @@ public abstract class Player extends Entity {
     protected double defPower;
     protected Level  levelObj;
     protected List<Items> inventory;
+    protected Sound sfx = new Sound();
+
+    public void playSFX(int id) {
+        sfx.setFile(id);
+        sfx.play();
+    }
 
     public Player(String nama, String tipe, double hp, double mp, double atkPower, double defPower, int speed) {
         super(nama, tipe, hp, speed);

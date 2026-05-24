@@ -1,6 +1,7 @@
 package enemy;
 
 import entity.Entity;
+import sound.Sound;
 
 public class LargeEnemy extends Enemy {
 
@@ -12,6 +13,7 @@ public class LargeEnemy extends Enemy {
     public String attack(Entity target) {
         double dmg = hitungDamage(atkPower, target);
         target.setHp(target.getHp() - dmg);
+        playSFX(Sound.ENEMY_ATTACK);
         return nama + " [Large] — Brute Slam! (" + (int)dmg + " DMG)";
     }
 
@@ -19,6 +21,7 @@ public class LargeEnemy extends Enemy {
     public String skill(Entity target) {
         double dmg = hitungDamage(atkPower * 1.8, target);
         target.setHp(target.getHp() - dmg);
+        playSFX(Sound.ENEMY_ATTACK);
         return nama + " [Large] — Ground Smash! (" + (int)dmg + " DMG)";
     }
 
@@ -26,6 +29,7 @@ public class LargeEnemy extends Enemy {
     public String ultimate(Entity target) {
         double dmg = hitungDamage(atkPower * 2.5, target);
         target.setHp(target.getHp() - dmg);
+        playSFX(Sound.ENEMY_ATTACK);
         return nama + " [Large] — ★ EARTHQUAKE! (" + (int)dmg + " DMG BESAR!)";
     }
 }
