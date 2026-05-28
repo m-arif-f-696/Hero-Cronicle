@@ -26,10 +26,10 @@ public class GameState {
         party.add(new Tank("Gorrath"));
 
         shopItems.add(new Items("Elixir Kehidupan", "+80 HP untuk semua ally",  120,  0, 80));
-        shopItems.add(new Items("Rune Kekuatan",    "+10 ATK permanen",         180, 10,  0));
+        shopItems.add(new Items("Rune Kekuatan",    "+10 ATK permanen",         180, 10));
         shopItems.add(new Items("Vial Mana",        "+50 Max-HP semua ally",    100,  0, 50));
         shopItems.add(new Items("Baju Zirah",       "+30 HP permanen",          150,  0, 30));
-        shopItems.add(new Items("Pedang Kuno",      "+15 ATK permanen",         300, 15,  0));
+        shopItems.add(new Items("Pedang Kuno",      "+15 ATK permanen",         300, 15));
         shopItems.add(new Items("Jimat Pelindung",  "+100 HP permanen",         250,  0,100));
     }
 

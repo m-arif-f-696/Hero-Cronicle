@@ -7,6 +7,10 @@ public class Items {
     private double damage;
     private double health;
 
+    public Items(String nama, String deskripsi, double price, double damage) {
+        this(nama, deskripsi, price, damage, 0);
+    }
+
     public Items(String nama, String deskripsi, double price, double damage, double health) {
         this.nama      = nama;
         this.deskripsi = deskripsi;
