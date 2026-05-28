@@ -1,12 +1,17 @@
 package gui;
 
+import sound.Music;
+
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 
 public class GameFrame extends JFrame {
     private static GameFrame instance;
     private JPanel            mainContainer;
     private CardLayout        cardLayout;
+    private final Music       bgm = new Music();
 
     public static final String MAIN_MENU   = "MAIN_MENU";
     public static final String CAMPAIGN    = "CAMPAIGN";
@@ -51,6 +56,13 @@ public class GameFrame extends JFrame {
 
         add(mainContainer);
         showPanel(MAIN_MENU);
+
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                bgm.close();
+            }
+        });
         setVisible(true);
     }
 
@@ -63,6 +75,12 @@ public class GameFrame extends JFrame {
             case MAIN_MENU:   mainMenuPanel.refresh();    break;
         }
         cardLayout.show(mainContainer, name);
+
+        if (BATTLE.equals(name)) {
+            bgm.playBattle();
+        } else {
+            bgm.playMenu();
+        }
     }
 
     public void startBattle(String enemyConfig, String stageLabel, boolean isExplore, int epReward, int goldReward) {

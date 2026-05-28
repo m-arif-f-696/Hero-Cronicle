@@ -40,21 +40,16 @@ public class Sound {
     }
 
     public void play(){
-        if (clip != null) {
-            clip.start();
-        }
+        clip.start();
+
     }
 
     public void loop(){
-        if (clip != null) {
-            clip.loop(Clip.LOOP_CONTINUOUSLY);
-        }
+        clip.loop(Clip.LOOP_CONTINUOUSLY);
     }
 
     public void stop() {
-        if (clip != null && clip.isRunning()) {
-            clip.stop();
-        }
+        clip.stop();
     }
 
 }
